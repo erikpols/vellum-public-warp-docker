@@ -48,7 +48,6 @@ async fn main() {
     let index = warp::path::end()
         .and(warp::get())
         .and(warp::fs::file("./static/index.html"));
-    // let index = path!("/").and(warp::fs::file("./static/index.html"));
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -76,5 +75,5 @@ async fn main() {
     let routes = index.with(cors).with(log).recover(handle_rejection);
 
     log::warn!("Launching warp on port 3022");
-    warp::serve(routes).run(([0, 0, 0, 0], 3022)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], 3022)).await;
 }
