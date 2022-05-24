@@ -64,19 +64,20 @@ async fn main() {
         .with(cors)
         .with(log);
 
-        let port = if let Ok(port_str) = env::var("PORT") {
-            if let Ok(port) = port_str.parse::<u16>() {
-                log::warn!("Starting server on port {}", port);
-                port
-            } else {
-                log::warn!("Could not parse environment variable PORT. Assuming dev environment: port 3022");
-                3022    
-            }
-        } else {
-            log::warn!("Environment variable PORT not found. Assuming dev environment: port 3022");
-            3022
-        };
+    //     let port = if let Ok(port_str) = env::var("PORT") {
+    //         if let Ok(port) = port_str.parse::<u16>() {
+    //             log::warn!("Starting server on port {}", port);
+    //             port
+    //         } else {
+    //             log::warn!("Could not parse environment variable PORT. Assuming dev environment: port 3022");
+    //             3022    
+    //         }
+    //     } else {
+    //         log::warn!("Environment variable PORT not found. Assuming dev environment: port 3022");
+    //         3022
+    //     };
         // let port = env::var("PORT").unwrap_or("".to_string()).parse::<u16>().unwrap_or(3022);
+        log::warn!("Launching warp on port 3022");
 
-    warp::serve(routes).run(([0, 0, 0, 0], port)).await;
+    warp::serve(routes).run(([0, 0, 0, 0], 3022)).await;
 }

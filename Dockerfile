@@ -23,9 +23,9 @@ COPY --from=builder /geodata/target/release/geodata .
 #    -subj "/C=GB/ST=London/L=London/O=Global Security/OU=IT Department/CN=example.com"
 
 # Expose the port our app is running on
-ENV PORT=80
+ENV PORT=3022
 
-EXPOSE 80
+EXPOSE 3022
 
 # Run the application!
 #CMD ["./target/release/geodata"]
