@@ -3,8 +3,9 @@ extern crate dotenv;
 use env_logger::*;
 use log::LevelFilter;
 use std::io::Write;
-use warp::{path, Filter};
+use warp::{http::StatusCode, Rejection, Reply, Filter};
 // use futures_util::{StreamExt};
+use std::convert::Infallible;
 
 // mod error;
 // mod caches;
@@ -16,6 +17,34 @@ use warp::{path, Filter};
 // mod db;
 // mod utilities;
 use std::env;
+
+
+pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
+    let code;
+    let message;
+
+    if err.is_not_found() {
+        code = StatusCode::NOT_FOUND;
+        message = "Not Found";
+    } else if let Some(_) = err.find::<warp::filters::body::BodyDeserializeError>() {
+        code = StatusCode::BAD_REQUEST;
+        message = "Invalid Body";
+    } else if let Some(_) = err.find::<warp::reject::MethodNotAllowed>() {
+        code = StatusCode::METHOD_NOT_ALLOWED;
+        message = "Method Not Allowed";
+    } else {
+        eprintln!("unhandled error: {:?}", err);
+        code = StatusCode::INTERNAL_SERVER_ERROR;
+        message = "Internal Server Error";
+    }
+
+    // let json = warp::reply::json(&ErrorResponse {
+    //     message: message.into(),
+    // });
+
+    Ok(warp::reply::with_status(message, code))
+}
+
 
 #[tokio::main]
 async fn main() {
@@ -63,7 +92,8 @@ async fn main() {
 
     let routes = index
         .with(cors)
-        .with(log);
+        .with(log)
+        .recover(handle_rejection);
 
     //     let port = if let Ok(port_str) = env::var("PORT") {
     //         if let Ok(port) = port_str.parse::<u16>() {
