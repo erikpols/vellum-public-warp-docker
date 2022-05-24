@@ -75,5 +75,5 @@ async fn main() {
     let routes = index.with(cors).with(log).recover(handle_rejection);
 
     log::warn!("Launching warp on port 3022");
-    warp::serve(routes).run(([127, 0, 0, 1], 3022)).await;
+    warp::serve(routes).run(([0, 0, 0, 0], 3022)).await;
 }
