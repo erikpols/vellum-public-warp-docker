@@ -2,22 +2,9 @@ extern crate dotenv;
 
 use env_logger::*;
 use log::LevelFilter;
-use std::io::Write;
-use warp::{http::StatusCode, Rejection, Reply, Filter};
-// use futures_util::{StreamExt};
 use std::convert::Infallible;
-
-// mod error;
-// mod caches;
-// mod constants;
-// mod controllers;
-// mod handlers;
-// mod integrations;
-// mod models;
-// mod db;
-// mod utilities;
-use std::env;
-
+use std::io::Write;
+use warp::{http::StatusCode, Filter, Rejection, Reply};
 
 pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
     let code;
@@ -38,13 +25,8 @@ pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply,
         message = "Internal Server Error";
     }
 
-    // let json = warp::reply::json(&ErrorResponse {
-    //     message: message.into(),
-    // });
-
     Ok(warp::reply::with_status(message, code))
 }
-
 
 #[tokio::main]
 async fn main() {
@@ -63,8 +45,10 @@ async fn main() {
         .filter(None, LevelFilter::Warn)
         .init();
 
-        let index = warp::path::end().and(warp::get()).and(warp::fs::file("./static/index.html"));
-        // let index = path!("/").and(warp::fs::file("./static/index.html"));
+    let index = warp::path::end()
+        .and(warp::get())
+        .and(warp::fs::file("./static/index.html"));
+    // let index = path!("/").and(warp::fs::file("./static/index.html"));
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -79,7 +63,6 @@ async fn main() {
         ])
         .allow_methods(vec!["GET", "POST"]);
 
-    // let log = warp::log("example::api");
     let log = warp::log::custom(|info| {
         eprintln!(
             "{} {} {} {:?}",
@@ -90,25 +73,8 @@ async fn main() {
         );
     });
 
-    let routes = index
-        .with(cors)
-        .with(log)
-        .recover(handle_rejection);
+    let routes = index.with(cors).with(log).recover(handle_rejection);
 
-    //     let port = if let Ok(port_str) = env::var("PORT") {
-    //         if let Ok(port) = port_str.parse::<u16>() {
-    //             log::warn!("Starting server on port {}", port);
-    //             port
-    //         } else {
-    //             log::warn!("Could not parse environment variable PORT. Assuming dev environment: port 3022");
-    //             3022    
-    //         }
-    //     } else {
-    //         log::warn!("Environment variable PORT not found. Assuming dev environment: port 3022");
-    //         3022
-    //     };
-        // let port = env::var("PORT").unwrap_or("".to_string()).parse::<u16>().unwrap_or(3022);
-        log::warn!("Launching warp on port 3022");
-
+    log::warn!("Launching warp on port 3022");
     warp::serve(routes).run(([0, 0, 0, 0], 3022)).await;
 }
