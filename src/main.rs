@@ -34,7 +34,8 @@ async fn main() {
         .filter(None, LevelFilter::Warn)
         .init();
 
-    let index = path!("imports" / "index.html").and(warp::fs::file("./static/index.html"));
+        let index = warp::path::end().and(warp::get()).and(warp::fs::file("./static/index.html"));
+        // let index = path!("/").and(warp::fs::file("./static/index.html"));
 
     let cors = warp::cors()
         .allow_any_origin()
