@@ -4,7 +4,7 @@ use env_logger::*;
 use log::LevelFilter;
 use std::convert::Infallible;
 use std::io::Write;
-use warp::{http::StatusCode, Filter, Rejection, Reply};
+use warp::{path, http::StatusCode, Filter, Rejection, Reply};
 
 pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
     let code;
@@ -49,6 +49,10 @@ async fn main() {
         .and(warp::get())
         .and(warp::fs::file("./static/index.html"));
 
+    let sub = path!("sub")
+        .and(warp::get())
+        .and(warp::fs::file("./static/index.html"));
+
     let cors = warp::cors()
         .allow_any_origin()
         .allow_headers(vec![
@@ -70,9 +74,15 @@ async fn main() {
             info.status(),
             info.elapsed(),
         );
+        eprintln!(
+            "Remote addr: {:?}, Host: {:?} ",
+            info.remote_addr(),
+            info.host(),
+        );
+        eprintln!("Headers: {:?}", info.request_headers(),);
     });
 
-    let routes = index.with(cors).with(log).recover(handle_rejection);
+    let routes = index.or(sub).with(cors).with(log).recover(handle_rejection);
 
     log::warn!("Launching warp on port 3022");
     warp::serve(routes).run(([0, 0, 0, 0], 3022)).await;
