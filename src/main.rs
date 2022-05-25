@@ -4,7 +4,7 @@
 // use log::LevelFilter;
 use std::convert::Infallible;
 use std::io::Write;
-use warp::{path, http::StatusCode, Filter, Rejection, Reply};
+use warp::{http::StatusCode, path, Filter, Rejection, Reply};
 
 pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
     let code;
@@ -52,7 +52,7 @@ async fn main() {
     let sub = path!("sub")
         .and(warp::get())
         .and(warp::fs::file("./static/index.html"));
-    
+
     let health = warp::path!("health").and_then(health_handler);
 
     let cors = warp::cors()
@@ -87,9 +87,12 @@ async fn main() {
     // original dressed down
     // let routes = index.or(sub).with(cors).with(log).recover(handle_rejection);
     // let routes = index.or(sub).with(log).recover(handle_rejection);
-    
+
     // logrocket
-    let routes = health.with(warp::cors().allow_any_origin());
+    let routes = health
+        .or(sub)
+        .or(index)
+        .with(warp::cors().allow_any_origin());
 
     eprintln!("Launching warp on port 3022");
     warp::serve(routes).run(([0, 0, 0, 0], 3022)).await;
@@ -97,7 +100,6 @@ async fn main() {
 async fn health_handler() -> std::result::Result<impl Reply, Rejection> {
     Ok("OK")
 }
-
 
 // use warp::{Filter, Rejection, Reply};
 
