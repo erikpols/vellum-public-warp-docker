@@ -4,7 +4,7 @@
 // use log::LevelFilter;
 use std::convert::Infallible;
 use std::io::Write;
-use warp::{http::StatusCode, path, Filter, Rejection, Reply};
+use warp::{fs::file, http::StatusCode, path, Filter, Rejection, Reply};
 
 pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
     let code;
@@ -49,11 +49,16 @@ async fn main() {
         .and(warp::get())
         .and(warp::fs::file("./static/index.html"));
 
-    let sub = path!("sub")
+    let file_get = path!("file_get")
         .and(warp::get())
         .and(warp::fs::file("./static/index.html"));
 
+    let file_no_get = path!("file_no_get").and(warp::fs::file("./static/index.html"));
+
     let health = warp::path!("health").and_then(health_handler);
+    let health_get = warp::path!("health")
+        .and(warp::get())
+        .and_then(health_handler);
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -90,7 +95,9 @@ async fn main() {
 
     // logrocket
     let routes = health
-        .or(sub)
+        .or(health_get)
+        .or(file_get)
+        .or(file_no_get)
         .or(index)
         .with(warp::cors().allow_any_origin());
 
