@@ -82,7 +82,8 @@ async fn main() {
         eprintln!("Headers: {:?}", info.request_headers(),);
     });
 
-    let routes = index.or(sub).with(cors).with(log).recover(handle_rejection);
+    // let routes = index.or(sub).with(cors).with(log).recover(handle_rejection);
+    let routes = index.or(sub).with(log).recover(handle_rejection);
 
     log::warn!("Launching warp on port 3022");
     warp::serve(routes).run(([0, 0, 0, 0], 3022)).await;
