@@ -1,23 +1,38 @@
-# Tells docker to use the latest Rust official image
 FROM rust:latest as builder
 
-# Copy our current working directory into the container
-WORKDIR /geodata
-COPY ./ ./
+RUN USER=root cargo new --bin rust-docker-web
+WORKDIR ./rust-docker-web
+COPY ./Cargo.toml ./Cargo.toml
+RUN cargo build --release
+RUN rm src/*.rs
 
-RUN apt-get update && apt-get install -y cmake
+ADD . ./
 
-# Create the release build
-# RUN cargo install --path ./warp
+RUN rm ./target/release/deps/rust_docker_web*
 RUN cargo build --release
 
-FROM debian:bullseye-slim
-RUN apt-get update && apt-get install -y cmake
-COPY --from=builder /geodata/target/release/geodata .
 
-# Expose the port our app is running on
-ENV PORT=3022
-EXPOSE 3022
+FROM debian:buster-slim
+ARG APP=/usr/src/app
 
-# Run the application!
-CMD ["./geodata"]
+RUN apt-get update \
+    && apt-get install -y ca-certificates tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+EXPOSE 8000
+
+ENV TZ=Etc/UTC \
+    APP_USER=appuser
+
+RUN groupadd $APP_USER \
+    && useradd -g $APP_USER $APP_USER \
+    && mkdir -p ${APP}
+
+COPY --from=builder /rust-docker-web/target/release/rust-docker-web ${APP}/rust-docker-web
+
+RUN chown -R $APP_USER:$APP_USER ${APP}
+
+USER $APP_USER
+WORKDIR ${APP}
+
+CMD ["./rust-docker-web"]
