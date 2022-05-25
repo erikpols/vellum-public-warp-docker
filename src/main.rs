@@ -47,16 +47,10 @@ async fn main() {
 
     let index = warp::path::end()
         .and(warp::get())
-        .and(warp::fs::file("./static/index.html"));
-
-    let file_get = path!("file_get")
-        .and(warp::get())
-        .and(warp::fs::file("./static/index.html"));
-
-    let file_no_get = path!("file_no_get").and(warp::fs::file("./static/index.html"));
+        .and_then(health_handler);
 
     let health = warp::path!("health").and_then(health_handler);
-    let health_get = warp::path!("health")
+    let health_get = warp::path!("health_get")
         .and(warp::get())
         .and_then(health_handler);
 
@@ -96,8 +90,6 @@ async fn main() {
     // logrocket
     let routes = health
         .or(health_get)
-        .or(file_get)
-        .or(file_no_get)
         .or(index)
         .with(warp::cors().allow_any_origin());
 
