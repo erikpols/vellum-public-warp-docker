@@ -52,6 +52,8 @@ async fn main() {
     let sub = path!("sub")
         .and(warp::get())
         .and(warp::fs::file("./static/index.html"));
+    
+    let health = warp::path!("health").and_then(health_handler);
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -82,13 +84,19 @@ async fn main() {
         eprintln!("Headers: {:?}", info.request_headers(),);
     });
 
+    // original dressed down
     // let routes = index.or(sub).with(cors).with(log).recover(handle_rejection);
-    let routes = index.or(sub).with(log).recover(handle_rejection);
+    // let routes = index.or(sub).with(log).recover(handle_rejection);
+    
+    // logrocket
+    let routes = health.with(warp::cors().allow_any_origin());
 
     eprintln!("Launching warp on port 3022");
     warp::serve(routes).run(([0, 0, 0, 0], 3022)).await;
 }
-
+async fn health_handler() -> std::result::Result<impl Reply, Rejection> {
+    Ok("OK")
+}
 
 
 // use warp::{Filter, Rejection, Reply};
