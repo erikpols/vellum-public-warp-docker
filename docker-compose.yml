@@ -1,6 +1,6 @@
 version: '3'
 services:
   geodata:
-    image: "erikvellum/geodata"
+    image: "erikvellum/vellum-geodata"
     ports:
       - '80:3022'
