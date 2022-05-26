@@ -1,10 +1,10 @@
-extern crate dotenv;
+// extern crate dotenv;
 
-use env_logger::*;
-use log::LevelFilter;
+// use env_logger::*;
+// use log::LevelFilter;
 use std::convert::Infallible;
 use std::io::Write;
-use warp::{path, http::StatusCode, Filter, Rejection, Reply};
+use warp::{fs::file, http::StatusCode, path, Filter, Rejection, Reply};
 
 pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
     let code;
@@ -31,27 +31,28 @@ pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply,
 #[tokio::main]
 async fn main() {
     // init logger
-    Builder::new()
-        .format(|buf, record| {
-            writeln!(
-                buf,
-                "{} {} [{}]: {}",
-                record.file().unwrap_or("unknown"),
-                record.line().unwrap_or(0),
-                record.level(),
-                record.args()
-            )
-        })
-        .filter(None, LevelFilter::Warn)
-        .init();
+    // Builder::new()
+    //     .format(|buf, record| {
+    //         writeln!(
+    //             buf,
+    //             "{} {} [{}]: {}",
+    //             record.file().unwrap_or("unknown"),
+    //             record.line().unwrap_or(0),
+    //             record.level(),
+    //             record.args()
+    //         )
+    //     })
+    //     .filter(None, LevelFilter::Warn)
+    //     .init();
 
     let index = warp::path::end()
         .and(warp::get())
-        .and(warp::fs::file("./static/index.html"));
+        .and_then(health_handler);
 
-    let sub = path!("sub")
+    let health = warp::path!("health").and_then(health_handler);
+    let health_get = warp::path!("health_get")
         .and(warp::get())
-        .and(warp::fs::file("./static/index.html"));
+        .and_then(health_handler);
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -82,9 +83,37 @@ async fn main() {
         eprintln!("Headers: {:?}", info.request_headers(),);
     });
 
+    // original dressed down
     // let routes = index.or(sub).with(cors).with(log).recover(handle_rejection);
-    let routes = index.or(sub).with(log).recover(handle_rejection);
+    // let routes = index.or(sub).with(log).recover(handle_rejection);
 
-    log::warn!("Launching warp on port 3022");
+    // logrocket
+    let routes = health
+        .or(health_get)
+        .or(index)
+        .with(warp::cors().allow_any_origin());
+
+    eprintln!("Launching warp on port 3022");
     warp::serve(routes).run(([0, 0, 0, 0], 3022)).await;
 }
+async fn health_handler() -> std::result::Result<impl Reply, Rejection> {
+    Ok("OK")
+}
+
+// use warp::{Filter, Rejection, Reply};
+
+// type Result<T> = std::result::Result<T, Rejection>;
+
+// #[tokio::main]
+// async fn main() {
+//     let health_route = warp::path!("health").and_then(health_handler);
+
+//     let routes = health_route.with(warp::cors().allow_any_origin());
+
+//     println!("Started server at localhost:8000");
+//     warp::serve(routes).run(([0, 0, 0, 0], 8000)).await;
+// }
+
+// async fn health_handler() -> Result<impl Reply> {
+//     Ok("OK")
+// }
