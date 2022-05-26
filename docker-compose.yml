@@ -4,3 +4,7 @@ services:
     image: "erikvellum/vellum-geodata"
     ports:
       - '80:3022'
+  nginx-proxy:
+    image: "nginx"
+    volumes:
+      - "${EB_LOG_BASE_DIR}/nginx-proxy:/var/log/nginx"
